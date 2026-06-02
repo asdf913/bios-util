@@ -46,7 +46,7 @@ public class BiosUtil {
 			//
 			final File file = new File("/sys/devices/virtual/dmi/id/bios_vendor");
 			//
-			if (!file.exists() || !file.isFile() || !file.canRead()) {
+			if (or(file, x -> !exists(x), x -> !isFile(x), x -> !canRead(x))) {
 				//
 				return null;
 				//
@@ -139,6 +139,24 @@ public class BiosUtil {
 		} // if
 			//
 		return null;
+		//
+	}
+
+	private static boolean exists(final File instance) {
+		return instance != null && instance.getPath() != null && instance.exists();
+	}
+
+	private static boolean isFile(final File instance) {
+		return instance != null && instance.getPath() != null && instance.isFile();
+	}
+
+	private static boolean canRead(final File instance) {
+		return instance != null && instance.getPath() != null && instance.canRead();
+	}
+
+	private static <T> boolean or(final T value, final Predicate<T> a, final Predicate<T> b, final Predicate<T> c) {
+		//
+		return test(a, value) || test(b, value) || test(c, value);
 		//
 	}
 

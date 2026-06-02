@@ -1,11 +1,13 @@
 package org.apache.commons.lang3;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +35,8 @@ import javassist.util.proxy.ProxyObject;
 class BiosUtilTest {
 
 	private static Method METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_HEX_TO_BYTES, METHOD_GROUP, METHOD_GROUP_COUNT,
-			METHOD_MATCHER, METHOD_MATCHES, METHOD_AND, METHOD_TEST_AND_RUN = null;
+			METHOD_MATCHER, METHOD_MATCHES, METHOD_AND, METHOD_TEST_AND_RUN, METHOD_OR, METHOD_EXISTS, METHOD_IS_FILE,
+			METHOD_CAN_READ = null;
 
 	@BeforeSuite
 	static void beforeSuite() throws NoSuchMethodException {
@@ -57,6 +60,15 @@ class BiosUtilTest {
 		(METHOD_AND = clz.getDeclaredMethod("and", Object.class, Predicate.class, Predicate.class)).setAccessible(true);
 		//
 		(METHOD_TEST_AND_RUN = clz.getDeclaredMethod("testAndRun", Boolean.TYPE, Runnable.class)).setAccessible(true);
+		//
+		(METHOD_OR = clz.getDeclaredMethod("or", Object.class, Predicate.class, Predicate.class, Predicate.class))
+				.setAccessible(true);
+		//
+		(METHOD_EXISTS = clz.getDeclaredMethod("exists", File.class)).setAccessible(true);
+		//
+		(METHOD_IS_FILE = clz.getDeclaredMethod("isFile", File.class)).setAccessible(true);
+		//
+		(METHOD_CAN_READ = clz.getDeclaredMethod("canRead", File.class)).setAccessible(true);
 		//
 	}
 
@@ -448,6 +460,43 @@ class BiosUtilTest {
 		//
 		Assert.assertNull(invoke(METHOD_TEST_AND_RUN, null, Boolean.TRUE,
 				Reflection.newProxy(Runnable.class, ih = ObjectUtils.getIfNull(ih, IH::new))));
+		//
+	}
+
+	@Test
+	public void testOf() throws IllegalAccessException, InvocationTargetException {
+		//
+		final Predicate<?> alwaysTrue = Predicates.alwaysTrue();
+		//
+		Assert.assertEquals(invoke(METHOD_OR, null, null, alwaysTrue, alwaysTrue, alwaysTrue), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_OR, null, null, Predicates.alwaysFalse(), alwaysTrue, alwaysTrue),
+				Boolean.TRUE);
+		//
+	}
+
+	@Test
+	public void testExists() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+		//
+		Assert.assertEquals(invoke(METHOD_EXISTS, null, toFile(Path.of("1"))), Boolean.FALSE);
+		//
+	}
+
+	private static File toFile(final Path instance) {
+		return instance != null ? instance.toFile() : null;
+	}
+
+	@Test
+	public void testIsFile() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_IS_FILE, null, toFile(Path.of("1"))), Boolean.FALSE);
+		//
+	}
+
+	@Test
+	public void testCanRead() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_CAN_READ, null, toFile(Path.of("1s"))), Boolean.FALSE);
 		//
 	}
 }
