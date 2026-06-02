@@ -476,7 +476,7 @@ class BiosUtilTest {
 	}
 
 	@Test
-	public void testExists() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+	public void testExists() throws IllegalAccessException, InvocationTargetException {
 		//
 		Assert.assertEquals(invoke(METHOD_EXISTS, null, toFile(Path.of("1"))), Boolean.FALSE);
 		//
