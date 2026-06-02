@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -32,7 +33,7 @@ import javassist.util.proxy.ProxyObject;
 class BiosUtilTest {
 
 	private static Method METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_HEX_TO_BYTES, METHOD_GROUP, METHOD_GROUP_COUNT,
-			METHOD_MATCHER, METHOD_MATCHES, METHOD_AND = null;
+			METHOD_MATCHER, METHOD_MATCHES, METHOD_AND, METHOD_TEST_AND_RUN = null;
 
 	@BeforeSuite
 	static void beforeSuite() throws NoSuchMethodException {
@@ -55,6 +56,8 @@ class BiosUtilTest {
 		//
 		(METHOD_AND = clz.getDeclaredMethod("and", Object.class, Predicate.class, Predicate.class)).setAccessible(true);
 		//
+		(METHOD_TEST_AND_RUN = clz.getDeclaredMethod("testAndRun", Boolean.TYPE, Runnable.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
@@ -64,6 +67,12 @@ class BiosUtilTest {
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			//
+			if (Objects.equals(getReturnType(method), Void.TYPE)) {
+				//
+				return null;
+				//
+			} // if
+				//
 			final String name = getName(method);
 			//
 			if (proxy instanceof Member && Objects.equals(name, "getName")) {
@@ -122,6 +131,15 @@ class BiosUtilTest {
 
 	}
 
+	private IH ih = null;
+
+	@BeforeMethod
+	void beforeMetch() {
+		//
+		ih = new IH();
+		//
+	}
+
 	private static Class<?> getReturnType(final Method instance) {
 		return instance != null ? instance.getReturnType() : null;
 	}
@@ -136,8 +154,10 @@ class BiosUtilTest {
 		Object result = null;
 		//
 		String toString = null;
-		// s
+		//
 		Class<?>[] parameterTypes = null;
+		//
+		Class<?> parameterType = null;
 		//
 		Collection<Object> collection = null;
 		//
@@ -154,9 +174,13 @@ class BiosUtilTest {
 			//
 			for (int j = 0; j < parameterTypes.length; j++) {
 				//
-				if (Objects.equals(ArrayUtils.get(parameterTypes, j), Integer.TYPE)) {
+				if (Objects.equals(parameterType = ArrayUtils.get(parameterTypes, j), Integer.TYPE)) {
 					//
 					add(collection, Integer.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
+					//
+					add(collection, Boolean.FALSE);
 					//
 				} else {
 					//
@@ -206,10 +230,12 @@ class BiosUtilTest {
 		//
 		Collection<Object> collection = null;
 		//
-		final IH ih = new IH();
-		//
-		ih.test = Boolean.FALSE;
-		//
+		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
+			//
+			ih.test = Boolean.FALSE;
+			//
+		} // if
+			//
 		ProxyFactory proxyFactory = null;
 		//
 		Object object = null;
@@ -236,6 +262,10 @@ class BiosUtilTest {
 				} else if (Objects.equals(parameterType, Integer.TYPE)) {
 					//
 					add(collection, Integer.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
+					//
+					add(collection, Boolean.FALSE);
 					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//
@@ -411,4 +441,13 @@ class BiosUtilTest {
 		//
 	}
 
+	@Test
+	public void testTestAndRun() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_RUN, null, Boolean.TRUE, null));
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_RUN, null, Boolean.TRUE,
+				Reflection.newProxy(Runnable.class, ih = ObjectUtils.getIfNull(ih, IH::new))));
+		//
+	}
 }

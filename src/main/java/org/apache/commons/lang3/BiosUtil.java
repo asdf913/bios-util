@@ -73,12 +73,12 @@ public class BiosUtil {
 				//
 				for (int i = 0; i < getResultCount(result); i++) {
 					//
-					if (manufacturer != null) {
+					testAndRun(manufacturer != null, () -> {
 						//
 						throw new IllegalStateException();
 						//
-					} // if
-						//
+					});
+					//
 					manufacturer = Objects.toString(getValue(result, BiosProperty.Manufacturer, 0));
 					//
 				} // for
@@ -118,12 +118,12 @@ public class BiosUtil {
 												.compile("^.+\\\"firmware\\-vendor\"\\s+\\=\\s+\\<([0-9a-f]+)\\>$")),
 								line), x -> matches(x), x -> groupCount(x) > 0)) {
 							//
-							if (firmwareVendor != null) {
+							testAndRun(firmwareVendor != null, () -> {
 								//
 								throw new IllegalStateException();
 								//
-							} // if
-								//
+							});
+							//
 							firmwareVendor = new String(hexToBytes(group(matcher, 1)));
 							//
 						} // if
@@ -140,6 +140,12 @@ public class BiosUtil {
 			//
 		return null;
 		//
+	}
+
+	private static void testAndRun(final boolean condition, final Runnable runnable) {
+		if (condition && runnable != null) {
+			runnable.run();
+		}
 	}
 
 	private static <T> boolean and(final T value, final Predicate<T> a, final Predicate<T> b) {
