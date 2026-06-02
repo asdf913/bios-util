@@ -112,13 +112,11 @@ public class BiosUtil {
 					//
 					for (final String line : lines) {
 						//
-						if (matches(
-								matcher = matcher(
-										pattern = ObjectUtils.getIfNull(pattern,
-												() -> Pattern.compile(
-														"^.+\\\"firmware\\-vendor\"\\s+\\=\\s+\\<([0-9a-f]+)\\>$")),
-										line))
-								&& groupCount(matcher) > 0) {
+						if (and(matcher = matcher(
+								pattern = ObjectUtils.getIfNull(pattern,
+										() -> Pattern
+												.compile("^.+\\\"firmware\\-vendor\"\\s+\\=\\s+\\<([0-9a-f]+)\\>$")),
+								line), x -> matches(x), x -> groupCount(x) > 0)) {
 							//
 							if (firmwareVendor != null) {
 								//
@@ -142,6 +140,10 @@ public class BiosUtil {
 			//
 		return null;
 		//
+	}
+
+	private static <T> boolean and(final T value, final Predicate<T> a, final Predicate<T> b) {
+		return test(a, value) && test(b, value);
 	}
 
 	private static String group(final Matcher instance, final int index) {

@@ -20,6 +20,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicates;
 import com.google.common.reflect.Reflection;
 import com.sun.jna.platform.win32.COM.WbemcliUtil.WmiResult;
 
@@ -31,7 +32,7 @@ import javassist.util.proxy.ProxyObject;
 class BiosUtilTest {
 
 	private static Method METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_HEX_TO_BYTES, METHOD_GROUP, METHOD_GROUP_COUNT,
-			METHOD_MATCHER, METHOD_MATCHES = null;
+			METHOD_MATCHER, METHOD_MATCHES, METHOD_AND = null;
 
 	@BeforeSuite
 	static void beforeSuite() throws NoSuchMethodException {
@@ -51,6 +52,8 @@ class BiosUtilTest {
 		(METHOD_MATCHER = clz.getDeclaredMethod("matcher", Pattern.class, CharSequence.class)).setAccessible(true);
 		//
 		(METHOD_MATCHES = clz.getDeclaredMethod("matches", Matcher.class)).setAccessible(true);
+		//
+		(METHOD_AND = clz.getDeclaredMethod("and", Object.class, Predicate.class, Predicate.class)).setAccessible(true);
 		//
 	}
 
@@ -394,6 +397,17 @@ class BiosUtilTest {
 		Assert.assertEquals(invoke(METHOD_GROUP_COUNT, null, matcher), Integer.valueOf(0));
 		//
 		Assert.assertEquals(invoke(METHOD_GROUP, null, matcher, Integer.valueOf(0)), string);
+		//
+	}
+
+	@Test
+	public void testAnd() throws IllegalAccessException, InvocationTargetException {
+		//
+		final Predicate<?> alwaysTrue = Predicates.alwaysTrue();
+		//
+		Assert.assertEquals(invoke(METHOD_AND, null, null, alwaysTrue, alwaysTrue), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_AND, null, null, alwaysTrue, Predicates.alwaysFalse()), Boolean.FALSE);
 		//
 	}
 
