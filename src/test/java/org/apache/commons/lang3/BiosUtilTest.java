@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -36,7 +37,7 @@ class BiosUtilTest {
 
 	private static Method METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_HEX_TO_BYTES, METHOD_GROUP, METHOD_GROUP_COUNT,
 			METHOD_MATCHER, METHOD_MATCHES, METHOD_AND, METHOD_TEST_AND_RUN, METHOD_OR, METHOD_EXISTS, METHOD_IS_FILE,
-			METHOD_CAN_READ = null;
+			METHOD_CAN_READ, METHOD_GET_FIRM_WARE_VENDOR = null;
 
 	@BeforeSuite
 	static void beforeSuite() throws NoSuchMethodException {
@@ -70,6 +71,8 @@ class BiosUtilTest {
 		//
 		(METHOD_CAN_READ = clz.getDeclaredMethod("canRead", File.class)).setAccessible(true);
 		//
+		(METHOD_GET_FIRM_WARE_VENDOR = clz.getDeclaredMethod("getFirmwareVendor", Iterable.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
@@ -102,6 +105,10 @@ class BiosUtilTest {
 				return null;
 				//
 			} else if (proxy instanceof Collection && Objects.equals(name, "stream")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof Iterable && Objects.equals(name, "iterator")) {
 				//
 				return null;
 				//
@@ -499,4 +506,16 @@ class BiosUtilTest {
 		Assert.assertEquals(invoke(METHOD_CAN_READ, null, toFile(Path.of("1s"))), Boolean.FALSE);
 		//
 	}
+
+	@Test
+	public void testCanRead1() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNotNull(
+				invoke(METHOD_GET_FIRM_WARE_VENDOR, null, Collections.singleton(" \"firmware-vendor\" = <4100>")));
+		//
+		Assert.assertThrows(() -> invoke(METHOD_GET_FIRM_WARE_VENDOR, null,
+				Collections.nCopies(2, " \"firmware-vendor\" = <4100>")));
+		//
+	}
+
 }

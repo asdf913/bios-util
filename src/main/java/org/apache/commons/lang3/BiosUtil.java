@@ -97,48 +97,52 @@ public class BiosUtil {
 				//
 		} else if (Objects.equals(name, "sun.nio.fs.MacOSXFileSystem")) {
 			//
-			String firmwareVendor = null;
-			//
 			try (final InputStream is = getInputStream(
 					new ProcessBuilder("ioreg", "-l", "-p", "IODeviceTree").start())) {
 				//
-				final Collection<String> lines = is != null ? IOUtils.readLines(is, StandardCharsets.UTF_8) : null;
-				//
-				if (lines != null) {
-					//
-					Pattern pattern = null;
-					//
-					Matcher matcher = null;
-					//
-					for (final String line : lines) {
-						//
-						if (and(matcher = matcher(
-								pattern = ObjectUtils.getIfNull(pattern,
-										() -> Pattern
-												.compile("^.+\\\"firmware\\-vendor\"\\s+\\=\\s+\\<([0-9a-f]+)\\>$")),
-								line), x -> matches(x), x -> groupCount(x) > 0)) {
-							//
-							testAndRun(firmwareVendor != null, () -> {
-								//
-								throw new IllegalStateException();
-								//
-							});
-							//
-							firmwareVendor = new String(hexToBytes(group(matcher, 1)));
-							//
-						} // if
-							//
-					} // for
-						//
-				} // if
-					//
-				return StringUtils.trim(firmwareVendor);
+				return StringUtils
+						.trim(getFirmwareVendor(is != null ? IOUtils.readLines(is, StandardCharsets.UTF_8) : null));
 				//
 			} // try
 				//
 		} // if
 			//
 		return null;
+		//
+	}
+
+	private static String getFirmwareVendor(final Iterable<String> lines) {
+		//
+		String firmwareVendor = null;
+		//
+		if (lines != null && lines.iterator() != null) {
+			//
+			Pattern pattern = null;
+			//
+			Matcher matcher = null;
+			//
+			for (final String line : lines) {
+				//
+				if (and(matcher = matcher(
+						pattern = ObjectUtils.getIfNull(pattern,
+								() -> Pattern.compile("^.+\\\"firmware\\-vendor\"\\s+\\=\\s+\\<([0-9a-f]+)\\>$")),
+						line), x -> matches(x), x -> groupCount(x) > 0)) {
+					//
+					testAndRun(firmwareVendor != null, () -> {
+						//
+						throw new IllegalStateException();
+						//
+					});
+					//
+					firmwareVendor = new String(hexToBytes(group(matcher, 1)));
+					//
+				} // if
+					//
+			} // for
+				//
+		} // if
+			//
+		return firmwareVendor;
 		//
 	}
 
